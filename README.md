@@ -27,7 +27,7 @@ To set up the Todo List project:
 
 To set up the Todo List project:
 
-1. Navigate to the `todo-list` directory:
+1. Navigate to the `data-api` directory:
    ```bash
    cd ./data-api
 2. Install dependencies:
