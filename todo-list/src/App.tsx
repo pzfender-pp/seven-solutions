@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { ITodoItem } from "./interfaces/todoList";
 import TodoItem from "./components/TodoItem";
 import useTodoList from "./hooks/useTodoList";
-import _ from "lodash";
 import TodoTypeColumn from "./components/TodoTypeColumn";
+import moment from "moment";
 
 function App() {
     const { todoList, addTodoList, removeTodoList } = useTodoList();
@@ -12,46 +12,53 @@ function App() {
     const [vegetableTypeList, setVegetableTypeList] = useState<ITodoItem[]>([]);
 
     const handleRemoveTodoList = (item: ITodoItem, type: string) => {
-        removeTodoList(item);
-        setUpdatedList((prev) => [...prev, item]);
+        const newItem = { ...item, expiredTimestamp: moment().add(5, "second") };
+
+        removeTodoList(newItem);
+        setUpdatedList((prev) => [...prev, newItem]);
 
         if (type === "Fruit") {
-            setFruitTypeList((prev) => [...prev, item]);
+            setFruitTypeList((prev) => [...prev, newItem]);
         }
 
         if (type === "Vegetable") {
-            setVegetableTypeList((prev) => [...prev, item]);
+            setVegetableTypeList((prev) => [...prev, newItem]);
         }
     };
 
     const handleItemClick = (item: ITodoItem, type: string) => {
         addTodoList(item);
-        setUpdatedList((prev) => prev.filter((vege) => !_.isEqual(vege, item)));
+        setUpdatedList((prev) => prev.filter((update) => update.name !== item.name));
 
         if (type === "Fruit") {
-            setFruitTypeList((prev) => prev.filter((fruit) => !_.isEqual(fruit, item)));
+            setFruitTypeList((prev) => prev.filter((fruit) => fruit.name !== item.name));
         }
 
         if (type === "Vegetable") {
-            setVegetableTypeList((prev) => prev.filter((vege) => !_.isEqual(vege, item)));
+            setVegetableTypeList((prev) => prev.filter((vege) => vege.name !== item.name));
         }
     };
 
     useEffect(() => {
-        let timerId: ReturnType<typeof setTimeout>;
+        if (updatedList.length === 0) return;
 
-        if (updatedList.length > 0) {
-            timerId = setInterval(() => {
-                const cloneUpdatedList = [...updatedList];
-                const item = cloneUpdatedList.shift();
+        const now = moment();
+        const timeouts: ReturnType<typeof setTimeout>[] = [];
 
-                if (item) {
-                    handleItemClick(item, item.type);
-                }
-            }, 5000);
-        }
+        updatedList.forEach((item) => {
+            const delay = item && item.expiredTimestamp ? item.expiredTimestamp.diff(now, "millisecond") : 0;
 
-        return () => clearInterval(timerId);
+            const timeoutId = setTimeout(() => {
+                handleItemClick(item, item.type);
+                setUpdatedList((prev) => prev.filter((i) => i.name !== item.name));
+            }, Math.max(delay, 0));
+
+            timeouts.push(timeoutId);
+        });
+
+        return () => {
+            timeouts.forEach(clearTimeout);
+        };
     }, [updatedList]);
 
     return (

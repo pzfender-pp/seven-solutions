@@ -57,7 +57,7 @@ const useTodoList = () => {
     };
 
     const removeTodoList = (item: ITodoItem) => {
-        setTodoList((prev) => prev.filter((todo) => !_.isEqual(todo, item)));
+        setTodoList((prev) => prev.filter((todo) => todo.name !== item.name));
     };
 
     return { todoList, addTodoList, removeTodoList };

@@ -1,4 +1,5 @@
 export interface ITodoItem {
-    type: string
-    name: string
+    type: string;
+    name: string;
+    expiredTimestamp: moment.Moment | null;
 }
